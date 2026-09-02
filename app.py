@@ -825,7 +825,7 @@ def pat_get_conditions(c, pid):
 
 
 def save_triage_record(c, pat, result, temp, sys_bp, dia, hr, spo2, gluc, symp, preg, existing):
-    c.execute(
+    cursor = c.execute(
         """INSERT INTO triage_records
            (patient_id, temperature, systolic_bp, diastolic_bp, heart_rate, spo2,
             blood_glucose, symptoms, pregnancy_status, suggested_category,
@@ -835,12 +835,23 @@ def save_triage_record(c, pat, result, temp, sys_bp, dia, hr, spo2, gluc, symp, 
          result["category"], result["category"], result["reason"],
          result["recommended_action"], st.session_state.user_id),
     )
-    triage_id = c.lastrowid
-    c.execute("UPDATE patients SET risk_status=? WHERE id=?", (result["category"], pat["id"]))
+
+    triage_id = cursor.lastrowid
+
+    c.execute(
+        "UPDATE patients SET risk_status=? WHERE id=?",
+        (result["category"], pat["id"])
+    )
+
     c.commit()
+
     st.success("Triage record saved.")
+
     if st.session_state.offline_mode:
-        st.session_state.offline_records.append(f"Triage {pat['patient_code']}")
+        st.session_state.offline_records.append(
+            f"Triage {pat['patient_code']}"
+        )
+
     return triage_id
 
 
